@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Sheets API Quickstart</title>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <p>Sheets API Quickstart</p>
+
+    <!--Add buttons to initiate auth sequence and sign out-->
+    <button id="authorize_button" onclick="handleAuthClick()">Authorize</button>
+    <button id="signout_button" onclick="handleSignoutClick()">Sign Out</button>
+
+    <pre id="content" style="white-space: pre-wrap;"></pre>
+
+    <script type="text/javascript">
+      /* exported gapiLoaded */
+      /* exported gisLoaded */
+      /* exported handleAuthClick */
+      /* exported handleSignoutClick */
+
+      // TODO(developer): Set to client ID and API key from the Developer Console
+      const CLIENT_ID = '104110416687117444034';
+      const API_KEY = 'MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDSlr3AV53VlaJI\nrNOaEoKzXBJZKHVv5mWcpE7TX+Rry8jA7d4QXalI60SWLLwnl+2QLAlvTbq+kyOX\nASpitNTy0YEAqScUgBS+AyOg/IpKPtxJ+NDAbqZBtG4PkdyBeZecU1Vuvj9bBLaC\n02FO49+x80FlvE1Q9MjA7h3nVTu3HUmtoPAPYi8K5lIkLwWvBTIevT8sdF7Jw1r4\n8oXZ8gzXSGbAsYjsrVeKzGG4qc/8qmeOFLScSVaeOg5kABfJ5vvgQ/YNXoIJ9zT+\nzC2mEtLcRNLX/067WHR8BhwBuRKLg7D8z9YUzpl83/WxHl7Zyu+6ZXf/aKUy+t2k\nN25l8L13AgMBAAECgf94a2UWF66pgfV1RAlKWEtk0xbHVr7tL8Qj+SY2f8m69tr/\n6XcEATWhix/0Ti6e5zNxaGfD2ktSkkK5ejhCjpb90SSP2JwAR68i+IwgAoH1K6eT\nT8K51W+SBnA+k3EEJucnp9TO/sI7ydmwLqFLiZDg6fHfEGq0CwzBDS+3CqKbBAyB\njVhnpKbbDJVZW+AbB1OQJ3qYp5cEYLIHuJ4zbaMgJ1PLEWQtJ2NDFOO4mvVC24T5\n3W/MXcefQ+UJtEuKY69oDRREd2V81B1PqRrX/mmvCsvO7A8kMN1P3YnDFDU5y97R\nEWYNpylAEwjxfzPgNZbJlxTxjNg37ta+fYrC3Z0CgYEA71J0Oboyv2UBti/QE6ZU\nrN9mJxyN6C6naPzJNknb2KURfQcnVHmwOc3Psq9gej3qxHXa6whz+Y4wCSZb6+dg\nlm4XHm6cJYQUxZ5woXsN8+mPh6tlyEK3KS2Q3Yl3BGJHPAs+MPtxKaruMo1pmzh/\ndLsIqvLxwnMyfyL2vUXF/aUCgYEA4UOuYX7iZC+Y1rdctPyE0rZ8CT7JSHLxs0mk\nPh1EcNKwiNu6EgSj6gFW90ZnuOGPioOvfvgmJ/CUb2KtmI9ta+x3lB/L/AhbaDvu\nAgIKvLseKFz9PhPuIen811x2LqkVO56cPyrDK5fSwdh0GJIZN2JXGmvVNC4NcTzE\nOS/Gm+sCgYEAkfdUdDEg6qOMm7YlzxZP5vCKuags1UQ/T0V+4+HAeS6UsBFA58Eg\nvuDMoUteKLDDE/heAaQyOC+FFM+UmRmSS63x49nK2wboNHAiehs3s2Ds7e6YMcCf\nPjpQdQ52zPG0SOcCk5WIu8VJawPdOZMICgZZjwqGcfcZAXoty9tWmxECgYEAlUcq\nukVBda7tE+0zLGTjCFgR3naTIMW7UlqM0vTGNBYLEsa5idM1ZI86uGcZuTUQ0HPv\nyq5basBNPXshGyaBFrH/lFN19DD9kheU5BPCVcuScqEc2RSQDD1pZrZJQyadgYLc\nfCe0aqET842jcdzvhPpQSpwHD6stEUt5pYP5k70CgYEA3mm2+REGE+PwlF2WpZ9+\nUCB6Wfx76ON5eltz9UNK9Tcm68BKz845mUnXw4F3DTSzqol8O+QLuu/rSq6f0IBW\nE4L/dWAjaQ+nPtZDLRjAj4cWbLlgcUipkU9sXWJZ66c8km3un7M/sQCyWv6x0k8t\nhJxGT271YXA/Iwq4WKUG6/4=';
+
+      // Discovery doc URL for APIs used by the quickstart
+      const DISCOVERY_DOC = 'https://sheets.googleapis.com/$discovery/rest?version=v4';
+
+      // Authorization scopes required by the API; multiple scopes can be
+      // included, separated by spaces.
+      const SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly';
+
+      let tokenClient;
+      let gapiInited = false;
+      let gisInited = false;
+
+      document.getElementById('authorize_button').style.visibility = 'hidden';
+      document.getElementById('signout_button').style.visibility = 'hidden';
+
+      /**
+       * Callback after api.js is loaded.
+       */
+      function gapiLoaded() {
+        gapi.load('client', initializeGapiClient);
+      }
+
+      /**
+       * Callback after the API client is loaded. Loads the
+       * discovery doc to initialize the API.
+       */
+      async function initializeGapiClient() {
+        await gapi.client.init({
+          apiKey: API_KEY,
+          discoveryDocs: [DISCOVERY_DOC],
+        });
+        gapiInited = true;
+        maybeEnableButtons();
+      }
+
+      /**
+       * Callback after Google Identity Services are loaded.
+       */
+      function gisLoaded() {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope: SCOPES,
+          callback: '', // defined later
+        });
+        gisInited = true;
+        maybeEnableButtons();
+      }
+
+      /**
+       * Enables user interaction after all libraries are loaded.
+       */
+      function maybeEnableButtons() {
+        if (gapiInited && gisInited) {
+          document.getElementById('authorize_button').style.visibility = 'visible';
+        }
+      }
+
+      /**
+       *  Sign in the user upon button click.
+       */
+      function handleAuthClick() {
+        tokenClient.callback = async (resp) => {
+          if (resp.error !== undefined) {
+            throw (resp);
+          }
+          document.getElementById('signout_button').style.visibility = 'visible';
+          document.getElementById('authorize_button').innerText = 'Refresh';
+          await listMajors();
+        };
+
+        if (gapi.client.getToken() === null) {
+          // Prompt the user to select a Google Account and ask for consent to share their data
+          // when establishing a new session.
+          tokenClient.requestAccessToken({prompt: 'consent'});
+        } else {
+          // Skip display of account chooser and consent dialog for an existing session.
+          tokenClient.requestAccessToken({prompt: ''});
+        }
+      }
+
+      /**
+       *  Sign out the user upon button click.
+       */
+      function handleSignoutClick() {
+        const token = gapi.client.getToken();
+        if (token !== null) {
+          google.accounts.oauth2.revoke(token.access_token);
+          gapi.client.setToken('');
+          document.getElementById('content').innerText = '';
+          document.getElementById('authorize_button').innerText = 'Authorize';
+          document.getElementById('signout_button').style.visibility = 'hidden';
+        }
+      }
+
+      /**
+       * Print the names and majors of students in a sample spreadsheet:
+       * https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
+       */
+      async function listMajors() {
+        let response;
+        try {
+          // Fetch first 10 files
+          response = await gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
+            range: 'Class Data!A2:E',
+          });
+        } catch (err) {
+          document.getElementById('content').innerText = err.message;
+          return;
+        }
+        const range = response.result;
+        if (!range || !range.values || range.values.length == 0) {
+          document.getElementById('content').innerText = 'No values found.';
+          return;
+        }
+        // Flatten to string to display
+        const output = range.values.reduce(
+            (str, row) => `${str}${row[0]}, ${row[4]}\n`,
+            'Name, Major:\n');
+        document.getElementById('content').innerText = output;
+      }
+    </script>
+    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+  </body>
+</html>
