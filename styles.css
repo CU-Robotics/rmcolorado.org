@@ -20,7 +20,7 @@ body {
   margin: 0;
   padding: 0;
   color: #000;
-  font-size: 20px;
+  font-size: 25px;
   display: flex;
   justify-content: center;
   flex-direction: column;
@@ -42,8 +42,8 @@ body {
   padding: 0;
   overflow: hidden;
   background-color: #fff;
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
 
   box-shadow: 0px 2px 8px #000000;
 }
@@ -71,7 +71,7 @@ body {
   background-color: #eee;
 }
 .nav ul li img {
-  height: 18px;
+  height: 36px;
 }
 .nav #active a {
   color: #888;
@@ -296,7 +296,7 @@ body {
 .schedule-embed {
   border: none;
   background: none;
-  width: 1081px;
+  width: 996px;
   height: 225px;
   overflow: visible;
 }
