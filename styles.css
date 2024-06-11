@@ -296,7 +296,7 @@ body {
 .schedule-embed {
   border: none;
   background: none;
-  width: 996px;
+  width: 947px;
   height: 225px;
   overflow: visible;
 }
@@ -321,4 +321,13 @@ body {
   margin-top: 50px;
   width: 80%;
   height: 80%;
+}
+
+.doc-schedule-embed {
+  margin-top: 50px;
+  border: none;
+  background: none;
+  width: 831px;
+  height: 80%;
+  overflow: visible;
 }
